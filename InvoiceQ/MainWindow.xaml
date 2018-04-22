@@ -1,12 +1,55 @@
-﻿<Window x:Class="InvoiceQ.MainWindow"
+﻿<Window x:Name="window" x:Class="InvoiceQ.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:InvoiceQ"
+        xmlns:xwt="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
+        xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-        
-    </Grid>
+        Title="MainWindow" Height="597.831" Width="892.975" Loaded="Window_Loaded">
+    <DockPanel LastChildFill="True" Margin="0,0,0,10">
+        <DockPanel DockPanel.Dock="Left" VerticalAlignment="Stretch" Width="256" LastChildFill="True">
+            <DockPanel Height="40" DockPanel.Dock="Top" Margin="0,0,0,0">
+                <xwt:IconButton x:Name="btnAdd" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnAdd_Click"  >
+                    <xwt:IconButton.Icon>
+                        <Image Source="Resources/add.png"/>
+                    </xwt:IconButton.Icon>
+                </xwt:IconButton>
+                <xwt:IconButton x:Name="btnDel"  Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" >
+                    <xwt:IconButton.Icon>
+                        <Image Source="Resources/minus.png"/>
+                    </xwt:IconButton.Icon>
+                </xwt:IconButton>
+                <xwt:IconButton x:Name="btnPush" Width="40" HorizontalAlignment="Right" DockPanel.Dock="Right" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnPush_Click" IsEnabled="{Binding ReadyToPush, ElementName=window}" >
+                    <xwt:IconButton.Icon>
+                        <Image Source="Resources/arrow-double-right.png"/>
+                    </xwt:IconButton.Icon>
+                </xwt:IconButton>
+            </DockPanel>
+            <ListView x:Name="listView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="listView_SelectionChanged">
+                <ListView.Resources>
+                    <Style TargetType="{x:Type GridViewColumnHeader}">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </Style>
+                    <DataTemplate x:Key="listCellTemplate">
+                        <StackPanel Width="240" ToolTip="{Binding RawText}"  >
+                            <Image Source="{Binding Image}" />
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding Number, StringFormat=票号：\{0\}}"/>
+                                <TextBlock Text="{Binding Amount, StringFormat=金额：\{0:C\}}"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.Resources>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn CellTemplate="{DynamicResource listCellTemplate}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </DockPanel>
+        <!--<WebBrowser x:Name="browser" Margin="5,0,10,0" LoadCompleted="browser_LoadCompleted"/>-->
+        <cefSharp:ChromiumWebBrowser x:Name="browser" LoadingStateChanged="browser_LoadingStateChanged" Address="https://inv-veri.chinatax.gov.cn/" />
+    </DockPanel>
 </Window>
