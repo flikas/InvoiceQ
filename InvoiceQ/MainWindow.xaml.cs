@@ -1,12 +1,10 @@
 ﻿using Microsoft.Win32;
-using mshtml;
 using Spire.Pdf;
 using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Net.Http;
 using System.Threading;
 using System.Windows;
 using System.Windows.Media.Imaging;
@@ -25,6 +23,7 @@ namespace InvoiceQ
         public MainWindow()
         {
             InitializeComponent();
+            listView.ItemsSource = images;
             //browser.Navigate(new Uri("https://inv-veri.chinatax.gov.cn/"));
         }
 
@@ -53,32 +52,11 @@ namespace InvoiceQ
             }
         }
 
-        private void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            listView.ItemsSource = images;
-        }
-
-
-        private void listView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
-        {
-            OnPropertyChanged("ReadyToPush");
-        }
-
-        private void browser_LoadCompleted(object sender, System.Windows.Navigation.NavigationEventArgs e)
-        {
-
-            //MessageBox.Show(codeElement.GetType().ToString());
-            //    codeElement.setAttribute("value", inv.Code);
-        }
 
         private void btnPush_Click(object sender, RoutedEventArgs e)
         {
-          //  BackgroundWorker bgWorker = new BackgroundWorker();
-            BgWorkArgs args = new BgWorkArgs();
-            Invoice inv = args.Invoice = listView.SelectedItem as Invoice;
-            //args.Document = browser.Document as HTMLDocumentClass;
-            //bgWorker.DoWork += BgWorker_DoWork;
-            //bgWorker.RunWorkerAsync(args);
+            Invoice inv = listView.SelectedItem as Invoice;
+
             string cmd = string.Format(
                 "$(\"#fpdm\").val(\"{0}\");" +
                 "$(\"#kjje\").focus();"
@@ -94,29 +72,10 @@ namespace InvoiceQ
             browser.GetBrowser().MainFrame.ExecuteJavaScriptAsync(cmd);
 
         }
-        class BgWorkArgs
+
+        private void listView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
         {
-            public Invoice Invoice { get; set; }
-            public HTMLDocumentClass Document { get; set; }
-        }
-        private void BgWorker_DoWork(object sender, DoWorkEventArgs e)
-        {
-            BgWorkArgs args = e.Argument as BgWorkArgs;
-            Invoice inv = args.Invoice;
-            HTMLDocumentClass doc = args.Document;
-            HTMLInputElementClass codeElement = doc.getElementById("fpdm") as HTMLInputElementClass;
-            HTMLInputElementClass numberElement = doc.getElementById("fphm") as HTMLInputElementClass;
-            HTMLInputElementClass dateElement = doc.getElementById("kprq") as HTMLInputElementClass;
-            HTMLInputElementClass checkCodeElement = doc.getElementById("kjje") as HTMLInputElementClass;
-            HTMLInputElementClass captchaElement = doc.getElementById("yzm") as HTMLInputElementClass;
-            codeElement.focus();
-            codeElement.value = inv.Code;
-            numberElement.focus();
-            Thread.Sleep(1000);
-            numberElement.value = inv.Number;
-            dateElement.value = inv.Date.ToString("yyyyMMdd");
-            checkCodeElement.value = inv.CheckCode.Substring(inv.CheckCode.Length - 6);
-            captchaElement.focus();
+            OnPropertyChanged("ReadyToPush");
         }
 
         private void browser_LoadingStateChanged(object sender, CefSharp.LoadingStateChangedEventArgs e)

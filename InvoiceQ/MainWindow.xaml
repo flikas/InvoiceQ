@@ -7,7 +7,7 @@
         xmlns:xwt="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
         xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="597.831" Width="892.975" Loaded="Window_Loaded">
+        Title="MainWindow" Height="597.831" Width="892.975">
     <DockPanel LastChildFill="True" Margin="0,0,0,10">
         <DockPanel DockPanel.Dock="Left" VerticalAlignment="Stretch" Width="256" LastChildFill="True">
             <DockPanel Height="40" DockPanel.Dock="Top" Margin="0,0,0,0">
@@ -49,7 +49,6 @@
                 </ListView.View>
             </ListView>
         </DockPanel>
-        <!--<WebBrowser x:Name="browser" Margin="5,0,10,0" LoadCompleted="browser_LoadCompleted"/>-->
         <cefSharp:ChromiumWebBrowser x:Name="browser" LoadingStateChanged="browser_LoadingStateChanged" Address="https://inv-veri.chinatax.gov.cn/" />
     </DockPanel>
 </Window>
