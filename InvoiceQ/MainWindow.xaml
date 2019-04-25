@@ -7,48 +7,71 @@
         xmlns:xwt="clr-namespace:Xceed.Wpf.Toolkit;assembly=Xceed.Wpf.Toolkit"
         xmlns:cefSharp="clr-namespace:CefSharp.Wpf;assembly=CefSharp.Wpf"
         mc:Ignorable="d"
-        Title="MainWindow" Height="597.831" Width="892.975">
-    <DockPanel LastChildFill="True" Margin="0,0,0,10">
-        <DockPanel DockPanel.Dock="Left" VerticalAlignment="Stretch" Width="256" LastChildFill="True">
-            <DockPanel Height="40" DockPanel.Dock="Top" Margin="0,0,0,0">
-                <xwt:IconButton x:Name="btnAdd" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnAdd_Click"  >
-                    <xwt:IconButton.Icon>
-                        <Image Source="Resources/add.png"/>
-                    </xwt:IconButton.Icon>
-                </xwt:IconButton>
-                <xwt:IconButton x:Name="btnDel"  Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" >
-                    <xwt:IconButton.Icon>
-                        <Image Source="Resources/minus.png"/>
-                    </xwt:IconButton.Icon>
-                </xwt:IconButton>
-                <xwt:IconButton x:Name="btnPush" Width="40" HorizontalAlignment="Right" DockPanel.Dock="Right" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnPush_Click" IsEnabled="{Binding ReadyToPush, ElementName=window}" >
-                    <xwt:IconButton.Icon>
-                        <Image Source="Resources/arrow-double-right.png"/>
-                    </xwt:IconButton.Icon>
-                </xwt:IconButton>
-            </DockPanel>
-            <ListView x:Name="listView" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="listView_SelectionChanged">
-                <ListView.Resources>
-                    <Style TargetType="{x:Type GridViewColumnHeader}">
-                        <Setter Property="Visibility" Value="Collapsed"/>
-                    </Style>
-                    <DataTemplate x:Key="listCellTemplate">
-                        <StackPanel Width="240" ToolTip="{Binding RawText}"  >
-                            <Image Source="{Binding Image}" />
-                            <StackPanel Orientation="Horizontal">
-                                <TextBlock Text="{Binding Number, StringFormat=票号：\{0\}}"/>
-                                <TextBlock Text="{Binding Amount, StringFormat=金额：\{0:C\}}"/>
+        Title="InvoiceQ" Height="597.831" Width="892.975" WindowState="Maximized">
+    <Grid Margin="0,0,0,10">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="256" />
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
+        <xwt:BusyIndicator x:Name="listViewBusy" Grid.Column="0">
+            <DockPanel LastChildFill="True">
+                <DockPanel Height="40" DockPanel.Dock="Top" Margin="0,0,0,0">
+                    <xwt:IconButton x:Name="btnAdd" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnAdd_Click"  >
+                        <xwt:IconButton.Icon>
+                            <Image Source="Resources/add.png"/>
+                        </xwt:IconButton.Icon>
+                    </xwt:IconButton>
+                    <xwt:IconButton x:Name="btnDel"  Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" >
+                        <xwt:IconButton.Icon>
+                            <Image Source="Resources/minus.png"/>
+                        </xwt:IconButton.Icon>
+                    </xwt:IconButton>
+                    <xwt:IconButton x:Name="btnPush" Width="40" HorizontalAlignment="Right" DockPanel.Dock="Right" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnPush_Click" IsEnabled="{Binding ReadyToPush, ElementName=window}" >
+                        <xwt:IconButton.Icon>
+                            <Image Source="Resources/arrow-double-right.png"/>
+                        </xwt:IconButton.Icon>
+                    </xwt:IconButton>
+                    <xwt:IconButton x:Name="btnShot" Width="40" HorizontalAlignment="Right" DockPanel.Dock="Right" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnShot_Click">
+                        <xwt:IconButton.Icon>
+                            <Image Source="pack://siteoforigin:,,,/Resources/Screenshot.png"/>
+                        </xwt:IconButton.Icon>
+                    </xwt:IconButton>
+                    <xwt:IconButton x:Name="btnSave" Width="40" HorizontalAlignment="Right" DockPanel.Dock="Right" Background="{x:Null}" MouseOverBackground="{DynamicResource {x:Static SystemColors.ControlLightLightBrushKey}}" Click="btnSave_Click">
+                        <xwt:IconButton.Icon>
+                            <Image Source="pack://siteoforigin:,,,/Resources/save.png"/>
+                        </xwt:IconButton.Icon>
+                    </xwt:IconButton>
+                </DockPanel>
+                <ListView x:Name="listView" ScrollViewer.HorizontalScrollBarVisibility="Disabled" SelectionChanged="listView_SelectionChanged">
+                    <ListView.Resources>
+                        <Style TargetType="{x:Type GridViewColumnHeader}">
+                            <Setter Property="Visibility" Value="Collapsed"/>
+                        </Style>
+                        <DataTemplate x:Key="listCellTemplate">
+                            <StackPanel ToolTip="{Binding RawText}"  >
+                                <Image Source="{Binding Image}" />
+                                <Image Source="{Binding Result}"/>
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="{Binding Date, StringFormat=日期：\{0:d\}}"/>
+                                    <TextBlock Text="{Binding Amount, StringFormat=金额：\{0:C\}}"/>
+                                </StackPanel>
                             </StackPanel>
-                        </StackPanel>
-                    </DataTemplate>
-                </ListView.Resources>
-                <ListView.View>
-                    <GridView>
-                        <GridViewColumn CellTemplate="{DynamicResource listCellTemplate}"/>
-                    </GridView>
-                </ListView.View>
-            </ListView>
-        </DockPanel>
-        <cefSharp:ChromiumWebBrowser x:Name="browser" LoadingStateChanged="browser_LoadingStateChanged" Address="https://inv-veri.chinatax.gov.cn/" />
-    </DockPanel>
+                        </DataTemplate>
+                    </ListView.Resources>
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn CellTemplate="{DynamicResource listCellTemplate}"/>
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </DockPanel>
+        </xwt:BusyIndicator>
+        <GridSplitter Grid.Column="1"
+              HorizontalAlignment="Center"
+              VerticalAlignment="Stretch"
+              ShowsPreview="True"
+              Width="5" />
+        <cefSharp:ChromiumWebBrowser x:Name="browser" Grid.Column="2" LoadingStateChanged="browser_LoadingStateChanged" Address="https://inv-veri.chinatax.gov.cn/" />
+    </Grid>
 </Window>

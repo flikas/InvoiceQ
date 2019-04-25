@@ -1,13 +1,17 @@
 ﻿using Microsoft.Win32;
 using Spire.Pdf;
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
+using System.Web.Script.Serialization;
 using System.Windows;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace InvoiceQ
 {
@@ -31,25 +35,29 @@ namespace InvoiceQ
         {
             OpenFileDialog dlg = new OpenFileDialog();
             dlg.AddExtension = true;
+            dlg.Multiselect = true;
             dlg.DefaultExt = ".pdf";
             dlg.Filter = "PDF Documents(*.pdf)|*.pdf";
             dlg.Title = "打开电子发票文件";
             Nullable<bool> result = dlg.ShowDialog();
             if (result != true) return;
 
-            using (MemoryStream ms = new MemoryStream())
+            SynchronizationContext ViewContext = SynchronizationContext.Current;
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += (o, ea) =>
             {
-                PdfDocument doc = new PdfDocument(dlg.FileName);
-                Image img = doc.SaveAsImage(0);
-                img.Save(ms, ImageFormat.Bmp);
-                ms.Seek(0, SeekOrigin.Begin);
-                var bi = new BitmapImage();
-                bi.BeginInit();
-                bi.CacheOption = BitmapCacheOption.OnLoad;
-                bi.StreamSource = ms;
-                bi.EndInit();
-                images.Add(new Invoice(bi));
-            }
+                foreach (string f in (string[])ea.Argument)
+                {
+                    ViewContext.Post(x => images.Add((Invoice)x), new Invoice(f));
+                }
+            };
+
+            worker.RunWorkerCompleted += (o, ea) =>
+            {
+                listViewBusy.IsBusy = false;
+            };
+            listViewBusy.IsBusy = true;
+            worker.RunWorkerAsync(dlg.FileNames);
         }
 
 
@@ -59,18 +67,77 @@ namespace InvoiceQ
 
             string cmd = string.Format(
                 "$(\"#fpdm\").val(\"{0}\");" +
-                "$(\"#kjje\").focus();"
-                , inv.Code);
+                "$(\"#kjje\").focus();",
+                inv.Code);
             browser.GetBrowser().MainFrame.ExecuteJavaScriptAsync(cmd);
             Thread.Sleep(1000);
             cmd = string.Format(
                 "$(\"#kjje\").val(\"{0}\");" +
                 "$(\"#fphm\").val(\"{1}\");" +
                 "$(\"#kprq\").val(\"{2:yyyyMMdd}\");" +
-                "$(\"#yzm\").focus();"
-                , inv.BriefCheckCode, inv.Number, inv.Date);
+                "$(\"#yzm\").focus();",
+                inv.BriefCheckCode, inv.Number, inv.Date);
             browser.GetBrowser().MainFrame.ExecuteJavaScriptAsync(cmd);
+        }
 
+        private void btnShot_Click(object sender, RoutedEventArgs e)
+        {
+            int areaHeight = 0, areaWidth = 0;
+            Position areaPos = null;
+            Position dialogPos;
+            JavaScriptSerializer json = new JavaScriptSerializer();
+            Invoice inv = listView.SelectedItem as Invoice;
+
+            string cmd = string.Format("JSON.stringify($(\"#dialog-body\").offset())");
+            string dialogOffset = (string)browser.GetBrowser().MainFrame.EvaluateScriptAsync(cmd).Result.Result;
+            if (dialogOffset == null) return;
+            dialogPos = json.Deserialize<Position>(dialogOffset);
+
+            browser.GetBrowser().GetFrameIdentifiers().ForEach(t =>
+            {
+                CefSharp.IFrame frame = browser.GetBrowser().GetFrame(t);
+                if (frame.IsMain) return;
+                else
+                {
+                    cmd = string.Format("JSON.stringify($(\"#print_area\").offset())");
+                    string areaOffset = (string)frame.EvaluateScriptAsync(cmd).Result.Result;
+                    areaPos = json.Deserialize<Position>(areaOffset);
+                    cmd = string.Format("$(\"#print_area\").outerHeight()");
+                    areaHeight = (int)frame.EvaluateScriptAsync(cmd).Result.Result;
+                    cmd = string.Format("$(\"#print_area\").outerWidth()");
+                    areaWidth = (int)frame.EvaluateScriptAsync(cmd).Result.Result;
+                }
+            });
+            if (areaPos != null)
+            {
+                areaPos += dialogPos;
+                Int32Rect rect = new Int32Rect((int)areaPos.Left, (int)areaPos.Top, areaWidth, areaHeight);
+                System.Windows.Controls.Image contentImage = browser.Content as System.Windows.Controls.Image;
+                BitmapSource bs = contentImage.Source.Clone() as BitmapSource;
+                CroppedBitmap img = new CroppedBitmap(bs, rect);
+                inv.Result = img;
+
+            }
+        }
+
+        private void btnSave_Click(object sender, RoutedEventArgs e)
+        {
+            SaveFileDialog saveDialog = new SaveFileDialog();
+            saveDialog.Title = "选择保存路径";
+            if (saveDialog.ShowDialog() != true)
+                return;
+            String path = Path.GetDirectoryName(saveDialog.FileName);
+            foreach (Invoice i in images)
+            {
+                if (i.Result != null)
+                {
+                    BmpBitmapEncoder bitmapEncoder = new BmpBitmapEncoder();
+                    bitmapEncoder.Frames.Add(BitmapFrame.Create(i.Result));
+                    FileStream fs = new FileStream(Path.Combine(path, Path.GetFileName(Path.ChangeExtension(i.File, ".bmp"))), FileMode.Create);
+                    bitmapEncoder.Save(fs);
+                    fs.Close();
+                }
+            }
         }
 
         private void listView_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
