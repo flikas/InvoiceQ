@@ -37,6 +37,10 @@ namespace InvoiceQ
             QRCodeReader reader = new QRCodeReader();
             LuminanceSource luminanceSource = new BitmapSourceLuminanceSource(Image);
             Result result = reader.decode(new BinaryBitmap(new ZXing.Common.HybridBinarizer(luminanceSource)));
+            if ( result == null)
+            {
+                throw new FileFormatException("未找到发票二维码");
+            }
             File = file;
             RawText = result.Text;
             string[] splited = RawText.Split(',');

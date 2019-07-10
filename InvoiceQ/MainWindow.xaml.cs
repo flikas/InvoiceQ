@@ -1,17 +1,11 @@
-﻿using Microsoft.Win32;
-using Spire.Pdf;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.ComponentModel;
-using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
 using System.Web.Script.Serialization;
 using System.Windows;
-using System.Windows.Media;
+using System.Windows.Forms;
 using System.Windows.Media.Imaging;
-using System.Windows.Threading;
 
 namespace InvoiceQ
 {
@@ -39,8 +33,8 @@ namespace InvoiceQ
             dlg.DefaultExt = ".pdf";
             dlg.Filter = "PDF Documents(*.pdf)|*.pdf";
             dlg.Title = "打开电子发票文件";
-            Nullable<bool> result = dlg.ShowDialog();
-            if (result != true) return;
+            DialogResult result = dlg.ShowDialog();
+            if (result != System.Windows.Forms.DialogResult.OK) return;
 
             SynchronizationContext ViewContext = SynchronizationContext.Current;
             BackgroundWorker worker = new BackgroundWorker();
@@ -48,7 +42,14 @@ namespace InvoiceQ
             {
                 foreach (string f in (string[])ea.Argument)
                 {
-                    ViewContext.Post(x => images.Add((Invoice)x), new Invoice(f));
+                    try
+                    {
+                        ViewContext.Post(x => images.Add((Invoice)x), new Invoice(f));
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Windows.Forms.MessageBox.Show("加载文件 " + f + " 失败: " + ex.Message);
+                    }
                 }
             };
 
@@ -122,11 +123,13 @@ namespace InvoiceQ
 
         private void btnSave_Click(object sender, RoutedEventArgs e)
         {
-            SaveFileDialog saveDialog = new SaveFileDialog();
-            saveDialog.Title = "选择保存路径";
-            if (saveDialog.ShowDialog() != true)
+            FolderBrowserDialog saveDialog = new FolderBrowserDialog()
+            {
+                Description = "选择保存路径",
+            };
+            if (saveDialog.ShowDialog() != System.Windows.Forms.DialogResult.OK)
                 return;
-            String path = Path.GetDirectoryName(saveDialog.FileName);
+            String path = saveDialog.SelectedPath;
             foreach (Invoice i in images)
             {
                 if (i.Result != null)
