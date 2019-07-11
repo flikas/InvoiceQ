@@ -7,4 +7,4 @@
 3. 批量保存截图
 
 # Screenshot
-[doc/screenshot.png]
+[](doc/screenshot.png)
