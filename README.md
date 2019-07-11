@@ -5,3 +5,6 @@
 1. 自动填写发票信息
 2. 查询结果自动截图
 3. 批量保存截图
+
+# Screenshot
+[doc/screenshot.png]
